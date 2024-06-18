@@ -1,45 +1,78 @@
+import os
+import re
+import json
 import pyttsx3
 import random
+from elevenlabs.client import ElevenLabs
+from elevenlabs import save
+from dotenv import load_dotenv
 
-engine = pyttsx3.init()
+load_dotenv()
 
-voices = engine.getProperty('voices')
-#engine.setProperty('voice', voices[0].id)
+voices = [
+    "Adam",
+    "Antoni",
+    "Arnold",
+    "Bella",
+    "Domi",
+    "Elli",
+    "Josh",
+    "Rachel",
+    "Sam",
+]
+
+class elevenlabsRunner:
+    def __init__(self):
+        self.max_chars = 2500
+        self.voices = voices
+
+    def run(self, text, filepath, random_voice: bool = False):
+        if random_voice:
+            voice = self.randomvoice()
+        else:
+            voice = "Elli"
+
+        text = self.processText(text)
+
+        api_key=os.getenv("ELEVENLABS_API_KEY")
+
+        client = ElevenLabs(
+          api_key=api_key 
+        )
+
+        audio = client.generate(text=text, voice=voice, model="eleven_multilingual_v1")
+        save(audio=audio, filename=filepath)
+
+    def randomvoice(self):
+        return random.choice(self.voices)
+
+    def processText(self, text):
+
+        with open('swears.json', 'r') as f:
+            swears = json.load(f)
+
+        words = text.split()
+        for i in range(len(words)):
+            if words[i] in swears:
+                words[i] = swears[words[i]]
+        text = ' '.join(words)
+        text = re.sub(r'http\S+|www.\S+', '', text, flags=re.MULTILINE)
+        text = text.replace('*', '')
+
+        return text
+
 
 
 def soundifyAuthor(title, asker):
 
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[random.randrange(0,2)].id)
-
-    engine.save_to_file(title, asker+"/temp"+"0"+".mp3")
-    engine.runAndWait()
+    elevenlabs = elevenlabsRunner()
+    elevenlabs.run(title, asker+"/temp"+"0"+".mp3", random_voice=False)
 
 
 def soundifyComment(comment, index, sectionid, asker):
-    
-    '''
-    swears = ["fuck", "shit"]
-
-    comment = comment.split()
-
-    for word in comment:
-        if word in swears:
-            print("yikes")
-
-    ' '.join(comment)
-    '''
-    
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[0].id)
-
-    sectionid = str(sectionid)
-
-    if len(sectionid) < 2:
-        sectionid = "0" + sectionid
-
-    engine.save_to_file(comment, asker+"/temp"+str(index)+"_"+str(sectionid)+".mp3")
-    engine.runAndWait()
+    sectionid = str(sectionid).zfill(2)
+    elevenlabs = elevenlabsRunner()
+    elevenlabs.run(comment, asker+"/temp"+str(index)+"_"+str(sectionid)+".mp3")
 
 
 '''

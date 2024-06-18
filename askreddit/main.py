@@ -72,3 +72,9 @@ for i in range(1):
     else:
         author = post[0].author.name
     createVideo(author)
+
+    try:
+        shutil.rmtree(author)
+    except OSError:
+        pass
+    

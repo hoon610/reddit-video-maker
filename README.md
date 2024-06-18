@@ -16,7 +16,7 @@ Open main directory
 
 Install dependencies
 
- - `pip3 install moviepy praw PIL pyttsx3`
+ - `pip install moviepy praw Pillow pyttsx3`
 
 Change the PRAW token information of redditScrape.py in both the `longForm/utils` and `askreddit/utils` folders
 
